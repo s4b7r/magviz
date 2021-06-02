@@ -33,7 +33,6 @@ def drag_start(event):
         _drag_data["item"] = find_closest_dot(event.xdata, dots_xs)
         _drag_data["x"] = event.xdata
         _drag_data["y"] = event.ydata
-        # print(f'drag_start {_drag_data}')
 
 
 def drag_stop(event):
@@ -42,7 +41,6 @@ def drag_stop(event):
     _drag_data["item"] = None
     _drag_data["x"] = 0
     _drag_data["y"] = 0
-    # print(f'drag_stop {_drag_data}')
 
 
 def drag(event):
@@ -50,14 +48,12 @@ def drag(event):
     if _drag_data['item'] is not None and event.inaxes == coilplot:
         # compute how much the mouse has moved
         delta_x = event.xdata - _drag_data["x"]
-        delta_y = 0
         # move the object the appropriate amount
         dots_xs[_drag_data['item']] += delta_x
         update_plot()
         # record the new position
         _drag_data["x"] = event.xdata
         _drag_data["y"] = event.ydata
-        # print(f'drag {_drag_data}')
 
 
 root = Tk()
@@ -66,16 +62,27 @@ root.bind('<Escape>', quit)
 LIMSTART = -.25
 LIMEND = -LIMSTART
 
+MAGPLOT_YSTART = -3e-5
+MAGPLOT_YEND = -MAGPLOT_YSTART
+
 fig = Figure(figsize=(5, 4), dpi=100)
-axes = fig.subplots(nrows=3, ncols=1, sharex='col', sharey=False,
+axes = fig.subplots(nrows=3, ncols=2, sharex='col', sharey=False,
                     gridspec_kw={'height_ratios': [5, 1, 1]})
-magplot = axes[0]
-dirplot = axes[1]
-coilplot = axes[2]
+magplot = axes[0, 0]
+magplot.set_ylim(MAGPLOT_YSTART, MAGPLOT_YEND)
+dirplot = axes[1, 0]
+coilplot = axes[2, 0]
 coilplot.set_xlim(LIMSTART, LIMEND)
 
+magplot_centered = axes[0, 1]
+magplot.set_ylim(MAGPLOT_YSTART, MAGPLOT_YEND)
+dirplot_centered = axes[1, 1]
+coilplot_centered = axes[2, 1]
+
+# for ax in axes.flat:
+#     ax.autoscale(False)
+
 plt_canvas = FigureCanvasTkAgg(fig, root)
-# plt_canvas.get_tk_widget().grid(row=0, column=0)
 plt_canvas.get_tk_widget().pack(side="top",fill='both',expand=True)
 
 dots_xs = [
@@ -85,8 +92,8 @@ dots_xs = [
 DOT_Y = 0
 
 
-NUM_YS = 500
-LEITER_RESOLUTION = 500
+NUM_YS = 100
+LEITER_RESOLUTION = 100
 
 
 def update_plot():
@@ -104,12 +111,16 @@ def replot_dir(Bv_tot):
 
     Bd = get_field_dir(Bv_tot)
     ys = np.linspace(start=LIMSTART, stop=LIMEND, num=NUM_YS)
-    dirplot.clear()
-    dirplot.scatter(ys, np.zeros(shape=ys.shape), s=500, c=Bd[0, :], marker='o', antialiased=False, edgecolors='')
+    for plot in [dirplot, dirplot_centered]:
+        plot.clear()
+        plot.scatter(ys, np.zeros(shape=ys.shape), s=500, c=Bd[0, :], marker='o', antialiased=False, edgecolors='')
+
+    dirplot_centered.set_xlim(dots_xs[0], dots_xs[1])
 
 
 def replot_mag():
-    magplot.clear()
+    for plot in [magplot, magplot_centered]:
+        plot.clear()
 
     Bv_tot = np.zeros(shape=(1, NUM_YS, 3))
     for dotx in dots_xs:
@@ -125,20 +136,24 @@ def replot_mag():
         Bz = Bz.reshape(*Bz.shape, 1)
         Bv = np.concatenate((Bx, By, Bz), axis=2)
 
-        magplot.plot(ys, Bv[0, :, 2], color='k', linestyle=':')
+        for plot in [magplot, magplot_centered]:
+            plot.plot(ys, Bv[0, :, 2], color='k', linestyle=':')
 
         Bv_tot += Bv
 
-    magplot.plot(ys, Bv_tot[0, :, 2], color='r')
-    magplot.set_ylim(-3e-5, 3e-5)
+    for plot in [magplot, magplot_centered]:
+        plot.plot(ys, Bv_tot[0, :, 2], color='r')
+    magplot_centered.set_xlim(dots_xs[0], dots_xs[1])
 
     replot_dir(Bv_tot)
 
 
 def replot_dots(dots_xs):
-    coilplot.clear()
-    for dot_x in dots_xs:
-        coilplot.plot(dot_x, DOT_Y, color='red', marker='o', linestyle='')
+    for plot in [coilplot, coilplot_centered]:
+        plot.clear()
+        for dot_x in dots_xs:
+            plot.plot(dot_x, DOT_Y, color='red', marker='o', linestyle='')
+    coilplot_centered.set_xlim(dots_xs[0], dots_xs[1])
 
 
 update_plot()
