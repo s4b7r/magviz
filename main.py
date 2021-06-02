@@ -54,6 +54,15 @@ plot.plot(x, y, color="blue", marker="x", linestyle="")
 plt_canvas = FigureCanvasTkAgg(figure, root)
 plt_canvas.get_tk_widget().grid(row=0, column=0)
 
+
+def plt_click(event):
+    print(event)
+    plot.plot(event.xdata, event.ydata, color='green', marker='x', linestyle='')
+    plt_canvas.draw()
+
+
+figure.canvas.callbacks.connect('button_press_event', plt_click)
+
 COIL_CANVAS_HEIGHT = 20
 coil_canvas = Canvas(root, width=500, height=COIL_CANVAS_HEIGHT, background='gray75')
 coil_canvas.grid(column=0, row=1)
