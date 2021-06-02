@@ -28,11 +28,12 @@ def find_closest_dot(event_x, dots_xs):
 
 def drag_start(event):
     """Begining drag of an object"""
-    # record the item and its location
-    _drag_data["item"] = find_closest_dot(event.xdata, dots_xs)
-    _drag_data["x"] = event.xdata
-    _drag_data["y"] = event.ydata
-    # print(f'drag_start {_drag_data}')
+    if event.inaxes == coilplot:
+        # record the item and its location
+        _drag_data["item"] = find_closest_dot(event.xdata, dots_xs)
+        _drag_data["x"] = event.xdata
+        _drag_data["y"] = event.ydata
+        # print(f'drag_start {_drag_data}')
 
 
 def drag_stop(event):
@@ -46,7 +47,7 @@ def drag_stop(event):
 
 def drag(event):
     """Handle dragging of an object"""
-    if _drag_data['item'] is not None:
+    if _drag_data['item'] is not None and event.inaxes == coilplot:
         # compute how much the mouse has moved
         delta_x = event.xdata - _drag_data["x"]
         delta_y = 0
@@ -83,7 +84,8 @@ dots_xs = [
 DOT_Y = 0
 
 
-NUM_YS = 50
+NUM_YS = 500
+LEITER_RESOLUTION = 500
 
 
 def update_plot():
@@ -111,7 +113,7 @@ def replot_mag():
     Bv_tot = np.zeros(shape=(1, NUM_YS, 3))
     for dotx in dots_xs:
         ys = np.linspace(start=LIMSTART, stop=LIMEND, num=NUM_YS)
-        Leiter = [[x, dotx, 0] for x in np.linspace(start=LIMSTART, stop=LIMEND, num=50)]
+        Leiter = [[x, dotx, 0] for x in np.linspace(start=LIMSTART, stop=LIMEND, num=LEITER_RESOLUTION)]
         Bx, By, Bz, _ = BerechneFeld(Leiter, Strom=1, xs=(0,), ys=ys, zs=(8e-3,))
         
         Bx = Bx[:, :, 0]
@@ -127,6 +129,7 @@ def replot_mag():
         Bv_tot += Bv
 
     magplot.plot(ys, Bv_tot[0, :, 2], color='r')
+    magplot.set_ylim(-3e-5, 3e-5)
 
     replot_dir(Bv_tot)
 
