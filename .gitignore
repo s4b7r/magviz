@@ -1,2 +1,4 @@
 .vscode/
 .history/
+__pycache__/
+magfield.py

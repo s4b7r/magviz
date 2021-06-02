@@ -8,6 +8,8 @@ matplotlib.use("TkAgg")
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
+from magfield import BerechneFeld
+
 
 
 _drag_data = {"x": 0, "y": 0, "item": None}
@@ -60,29 +62,42 @@ def drag(event):
 root = Tk()
 root.bind('<Escape>', quit)
 
+LIMSTART = -.25
+LIMEND = -LIMSTART
+
 fig = Figure(figsize=(5, 4), dpi=100)
 axes = fig.subplots(nrows=2, ncols=1, sharex='col', sharey=False,
                     gridspec_kw={'height_ratios': [4, 1]})
 magplot = axes[0]
 coilplot = axes[1]
-coilplot.set_xlim(-1, 1)
+coilplot.set_xlim(LIMSTART, LIMEND)
 
 plt_canvas = FigureCanvasTkAgg(fig, root)
 plt_canvas.get_tk_widget().grid(row=0, column=0)
 
-magplot.plot(x := np.linspace(-1, 1, 50), np.sin(x))
-
 dots_xs = [
-        -.5,
-        .5
+        -.1,
+        .1
         ]
 DOT_Y = 0
+
+
+def replot_mag():
+    xs = np.linspace(start=LIMSTART, stop=LIMEND, num=50)
+    ys = xs
+    Leiter = [[x, dots_xs[0], 0] for x in xs]
+    _, _, Bz, _ = BerechneFeld(Leiter, Strom=1, xs=xs, ys=ys, zs=(8e-3,))
+    Bz = Bz[Bz.shape[0]//2, :, 0]
+
+    magplot.clear()
+    magplot.plot(ys, Bz)
 
 
 def replot_dots(dots_xs):
     coilplot.clear()
     for dot_x in dots_xs:
         coilplot.plot(dot_x, DOT_Y, color='red', marker='o', linestyle='')
+    replot_mag()
     plt_canvas.draw()
 
 
