@@ -75,7 +75,8 @@ coilplot = axes[2]
 coilplot.set_xlim(LIMSTART, LIMEND)
 
 plt_canvas = FigureCanvasTkAgg(fig, root)
-plt_canvas.get_tk_widget().grid(row=0, column=0)
+# plt_canvas.get_tk_widget().grid(row=0, column=0)
+plt_canvas.get_tk_widget().pack(side="top",fill='both',expand=True)
 
 dots_xs = [
         -.1,
@@ -104,7 +105,7 @@ def replot_dir(Bv_tot):
     Bd = get_field_dir(Bv_tot)
     ys = np.linspace(start=LIMSTART, stop=LIMEND, num=NUM_YS)
     dirplot.clear()
-    dirplot.scatter(ys, np.zeros(shape=ys.shape), s=100, c=Bd[0, :], marker='o', antialiased=False, edgecolors='')
+    dirplot.scatter(ys, np.zeros(shape=ys.shape), s=500, c=Bd[0, :], marker='o', antialiased=False, edgecolors='')
 
 
 def replot_mag():
