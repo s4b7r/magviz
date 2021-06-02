@@ -31,7 +31,7 @@ def drag(event):
     """Handle dragging of an object"""
     # compute how much the mouse has moved
     delta_x = event.x - _drag_data["x"]
-    delta_y = event.y - _drag_data["y"]
+    delta_y = 0
     # move the object the appropriate amount
     coil_canvas.move(_drag_data["item"], delta_x, delta_y)
     # record the new position
