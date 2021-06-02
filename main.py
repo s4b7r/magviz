@@ -32,7 +32,7 @@ def drag_start(event):
     _drag_data["item"] = find_closest_dot(event.xdata, dots_xs)
     _drag_data["x"] = event.xdata
     _drag_data["y"] = event.ydata
-    print(f'drag_start {_drag_data}')
+    # print(f'drag_start {_drag_data}')
 
 
 def drag_stop(event):
@@ -41,7 +41,7 @@ def drag_stop(event):
     _drag_data["item"] = None
     _drag_data["x"] = 0
     _drag_data["y"] = 0
-    print(f'drag_stop {_drag_data}')
+    # print(f'drag_stop {_drag_data}')
 
 
 def drag(event):
@@ -56,7 +56,7 @@ def drag(event):
         # record the new position
         _drag_data["x"] = event.xdata
         _drag_data["y"] = event.ydata
-        print(f'drag {_drag_data}')
+        # print(f'drag {_drag_data}')
 
 
 root = Tk()
@@ -82,15 +82,31 @@ dots_xs = [
 DOT_Y = 0
 
 
-def replot_mag():
-    xs = np.linspace(start=LIMSTART, stop=LIMEND, num=50)
-    ys = xs
-    Leiter = [[x, dots_xs[0], 0] for x in xs]
-    _, _, Bz, _ = BerechneFeld(Leiter, Strom=1, xs=xs, ys=ys, zs=(8e-3,))
-    Bz = Bz[Bz.shape[0]//2, :, 0]
+NUM_YS = 50
 
+
+def replot_mag():
     magplot.clear()
-    magplot.plot(ys, Bz)
+
+    Bv_tot = np.zeros(shape=(1, NUM_YS, 3))
+    for dotx in dots_xs:
+        ys = np.linspace(start=LIMSTART, stop=LIMEND, num=NUM_YS)
+        Leiter = [[x, dotx, 0] for x in np.linspace(start=LIMSTART, stop=LIMEND, num=50)]
+        Bx, By, Bz, _ = BerechneFeld(Leiter, Strom=1, xs=(0,), ys=ys, zs=(8e-3,))
+        
+        Bx = Bx[:, :, 0]
+        By = By[:, :, 0]
+        Bz = Bz[:, :, 0]
+        Bx = Bx.reshape(*Bx.shape, 1)
+        By = By.reshape(*By.shape, 1)
+        Bz = Bz.reshape(*Bz.shape, 1)
+        Bv = np.concatenate((Bx, By, Bz), axis=2)
+
+        magplot.plot(ys, Bv[0, :, 2], color='k', linestyle=':')
+
+        Bv_tot += Bv
+
+    magplot.plot(ys, Bv_tot[0, :, 2], color='r')
 
 
 def replot_dots(dots_xs):
