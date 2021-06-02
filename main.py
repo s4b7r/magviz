@@ -52,7 +52,7 @@ def drag(event):
         delta_y = 0
         # move the object the appropriate amount
         dots_xs[_drag_data['item']] += delta_x
-        replot_dots(dots_xs)
+        update_plot()
         # record the new position
         _drag_data["x"] = event.xdata
         _drag_data["y"] = event.ydata
@@ -66,10 +66,11 @@ LIMSTART = -.25
 LIMEND = -LIMSTART
 
 fig = Figure(figsize=(5, 4), dpi=100)
-axes = fig.subplots(nrows=2, ncols=1, sharex='col', sharey=False,
-                    gridspec_kw={'height_ratios': [4, 1]})
+axes = fig.subplots(nrows=3, ncols=1, sharex='col', sharey=False,
+                    gridspec_kw={'height_ratios': [5, 1, 1]})
 magplot = axes[0]
-coilplot = axes[1]
+dirplot = axes[1]
+coilplot = axes[2]
 coilplot.set_xlim(LIMSTART, LIMEND)
 
 plt_canvas = FigureCanvasTkAgg(fig, root)
@@ -83,6 +84,25 @@ DOT_Y = 0
 
 
 NUM_YS = 50
+
+
+def update_plot():
+    replot_dots(dots_xs)
+    replot_mag()
+    plt_canvas.draw()
+
+
+def replot_dir(Bv_tot):
+    def get_field_dir(field_vec):
+        field_dir = field_vec / np.expand_dims(np.linalg.norm(field_vec, ord=2, axis=2), axis=2)
+        field_dir += 1
+        field_dir *= .5
+        return field_dir
+
+    Bd = get_field_dir(Bv_tot)
+    ys = np.linspace(start=LIMSTART, stop=LIMEND, num=NUM_YS)
+    dirplot.clear()
+    dirplot.scatter(ys, np.zeros(shape=ys.shape), s=100, c=Bd[0, :], marker='o', antialiased=False, edgecolors='')
 
 
 def replot_mag():
@@ -108,16 +128,16 @@ def replot_mag():
 
     magplot.plot(ys, Bv_tot[0, :, 2], color='r')
 
+    replot_dir(Bv_tot)
+
 
 def replot_dots(dots_xs):
     coilplot.clear()
     for dot_x in dots_xs:
         coilplot.plot(dot_x, DOT_Y, color='red', marker='o', linestyle='')
-    replot_mag()
-    plt_canvas.draw()
 
 
-replot_dots(dots_xs)
+update_plot()
 
 fig.canvas.callbacks.connect('button_press_event', drag_start)
 fig.canvas.callbacks.connect('button_release_event', drag_stop)
