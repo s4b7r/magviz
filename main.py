@@ -1,11 +1,13 @@
 from tkinter import *
 from tkinter import ttk
 from tkinter.ttk import *
+import numpy as np
 
 import matplotlib
 matplotlib.use("TkAgg")
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+
 
 
 _drag_data = {"x": 0, "y": 0, "item": None}
@@ -42,26 +44,27 @@ def drag(event):
 root = Tk()
 root.bind('<Escape>', quit)
 
-figure = Figure(figsize=(5, 4), dpi=100)
-plot = figure.add_subplot(1, 1, 1)
+fig = Figure(figsize=(5, 4), dpi=100)
+figgrid = fig.add_gridspec(5, 1)
+magplot = fig.add_subplot(figgrid[:-1, 0])
+# magplot.set_title('[0, :-1]')
+coilplot = fig.add_subplot(figgrid[-1:, 0])
+# coilplot.set_title('[0, -1:]')
 
-plot.plot(0.5, 0.3, color="red", marker="o", linestyle="")
+magplot.plot(x := np.linspace(-1, 1, 50), np.sin(x))
 
-x = [ 0.1, 0.2, 0.3 ]
-y = [ -0.1, -0.2, -0.3 ]
-plot.plot(x, y, color="blue", marker="x", linestyle="")
-
-plt_canvas = FigureCanvasTkAgg(figure, root)
+plt_canvas = FigureCanvasTkAgg(fig, root)
 plt_canvas.get_tk_widget().grid(row=0, column=0)
 
 
 def plt_click(event):
     print(event)
-    plot.plot(event.xdata, event.ydata, color='green', marker='x', linestyle='')
-    plt_canvas.draw()
+    if event.inaxes == magplot:
+        magplot.plot(event.xdata, event.ydata, color='green', marker='x', linestyle='')
+        plt_canvas.draw()
 
 
-figure.canvas.callbacks.connect('button_press_event', plt_click)
+fig.canvas.callbacks.connect('button_press_event', plt_click)
 
 COIL_CANVAS_HEIGHT = 20
 coil_canvas = Canvas(root, width=500, height=COIL_CANVAS_HEIGHT, background='gray75')
