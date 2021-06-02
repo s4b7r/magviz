@@ -14,6 +14,7 @@ from magfield import BerechneFeld
 
 _drag_data = {"x": 0, "y": 0, "item": None}
 
+# Drag logic from https://stackoverflow.com/questions/6740855/board-drawing-code-to-move-an-oval/6789351#6789351
 
 def find_closest_dot(event_x, dots_xs):
     closest_diff = np.inf
@@ -81,6 +82,8 @@ coilplot_centered = axes[2, 1]
 
 # for ax in axes.flat:
 #     ax.autoscale(False)
+
+# matplotlib in tkinter from https://ishantheperson.github.io/posts/tkinter-matplotlib/
 
 plt_canvas = FigureCanvasTkAgg(fig, root)
 plt_canvas.get_tk_widget().pack(side="top",fill='both',expand=True)
