@@ -66,6 +66,10 @@ YLIMS = YLIMSTART, YLIMEND
 XLIMSTART = -.25
 XLIMEND = -XLIMSTART
 XLIMS = XLIMSTART, XLIMEND
+ZSTART = 0
+ZEND = 1e-2
+ZLIMS = ZSTART, ZEND
+NUM_ZS = 5
 ZPLANE = 8e-3
 
 MAGPLOT_YSTART = -3e-5
@@ -150,9 +154,9 @@ def replot_mag(centerview):
         plot.clear()
 
     ys = np.linspace(*centerview, num=NUM_YS)
-    zs = np.linspace(0, 1e-2, 20)
+    zs = np.linspace(*ZLIMS, NUM_ZS)
     zidx_zplane = np.argmin(np.abs(zs - ZPLANE))
-    print(f'z = {zs[zidx_zplane]}')
+    # print(f'z = {zs[zidx_zplane]}')
     Bv_tot = np.zeros(shape=(1, len(ys), len(zs), 3))
     for dotx in dots_xs:
         Leiter = [[x, dotx, 0] for x in np.linspace(start=XLIMSTART, stop=XLIMEND, num=LEITER_RESOLUTION)]
