@@ -70,14 +70,12 @@ fig = Figure(figsize=(5, 4), dpi=100)
 axes = fig.subplots(nrows=4, ncols=2, sharex='col', sharey=False,
                     gridspec_kw={'height_ratios': [5, 1, 1, 1]})
 magplot = axes[0, 0]
-magplot.set_ylim(MAGPLOT_YSTART, MAGPLOT_YEND)
 dirplot = axes[1, 0]
 vecplot = axes[2, 0]
 coilplot = axes[3, 0]
 coilplot.set_xlim(LIMSTART, LIMEND)
 
 magplot_centered = axes[0, 1]
-magplot.set_ylim(MAGPLOT_YSTART, MAGPLOT_YEND)
 dirplot_centered = axes[1, 1]
 vecplot_centered = axes[2, 1]
 coilplot_centered = axes[3, 1]
@@ -157,6 +155,7 @@ def replot_mag():
 
     for plot in [magplot, magplot_centered]:
         plot.plot(ys, Bv_tot[0, :, 2], color='r')
+        plot.set_ylim(MAGPLOT_YSTART, MAGPLOT_YEND)
     magplot_centered.set_xlim(dots_xs[0], dots_xs[1])
 
     replot_dir(Bv_tot)
