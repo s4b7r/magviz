@@ -184,7 +184,7 @@ def replot_dots(dots_xs, centerview):
     for plot in [coilplot, coilplot_centered]:
         plot.clear()
         for dot_x in dots_xs:
-            plot.plot(dot_x, DOT_Y, color='red', marker='o', linestyle='')
+            plot.plot(dot_x, DOT_Y, color='red', marker='x', linestyle='')
     coilplot.set_xlim(YLIMS)
     coilplot_centered.set_xlim(centerview)
 
