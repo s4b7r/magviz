@@ -60,8 +60,11 @@ def drag(event):
 root = Tk()
 root.bind('<Escape>', quit)
 
-LIMSTART = -.25
-LIMEND = -LIMSTART
+YLIMSTART = -.25
+YLIMEND = -YLIMSTART
+YLIMS = YLIMSTART, YLIMEND
+XLIMSTART = -.25
+XLIMEND = -XLIMSTART
 
 MAGPLOT_YSTART = -3e-5
 MAGPLOT_YEND = -MAGPLOT_YSTART
@@ -73,7 +76,6 @@ magplot = axes[0, 0]
 dirplot = axes[1, 0]
 vecplot = axes[2, 0]
 coilplot = axes[3, 0]
-coilplot.set_xlim(LIMSTART, LIMEND)
 
 magplot_centered = axes[0, 1]
 dirplot_centered = axes[1, 1]
@@ -100,44 +102,52 @@ LEITER_RESOLUTION = 100
 
 
 def update_plot():
-    replot_dots(dots_xs)
-    replot_mag()
+    dots_center = (dots_xs[1] - dots_xs[0]) / 2 + dots_xs[0]
+    centerview_width = .05
+    centerview_start = dots_center - centerview_width / 2
+    centerview_end = centerview_start + centerview_width
+    centerview = (centerview_start, centerview_end)
+
+    replot_dots(dots_xs, centerview)
+    replot_mag(centerview)
     plt_canvas.draw()
 
 
-def replot_vec(Bd):
-    ys = np.linspace(start=LIMSTART, stop=LIMEND, num=NUM_YS)
+def replot_vec(Bd, centerview):
+    ys = np.linspace(*centerview, num=NUM_YS)
     for plot in [vecplot, vecplot_centered]:
         plot.clear()
         plot.quiver(ys, np.zeros(shape=ys.shape), Bd[0, :, 1], Bd[0, :, 2], color=(Bd[0, :]+1)*.5, headwidth=1.5, headlength=2, headaxislength=2)
 
-    vecplot_centered.set_xlim(dots_xs[0], dots_xs[1])
+    vecplot.set_xlim(YLIMS)
+    vecplot_centered.set_xlim(centerview)
 
 
-def replot_dir(Bv_tot):
+def replot_dir(Bv_tot, centerview):
     def get_field_dir(field_vec):
         field_dir = field_vec / np.expand_dims(np.linalg.norm(field_vec, ord=2, axis=2), axis=2)
         return field_dir
 
     Bd = get_field_dir(Bv_tot)
-    ys = np.linspace(start=LIMSTART, stop=LIMEND, num=NUM_YS)
+    ys = np.linspace(*centerview, num=NUM_YS)
     for plot in [dirplot, dirplot_centered]:
         plot.clear()
         plot.scatter(ys, np.zeros(shape=ys.shape), s=500, c=(Bd[0, :]+1)*.5, marker='o', antialiased=False, edgecolors='')
 
-    dirplot_centered.set_xlim(dots_xs[0], dots_xs[1])
+    dirplot.set_xlim(YLIMS)
+    dirplot_centered.set_xlim(centerview)
 
-    replot_vec(Bd)
+    replot_vec(Bd, centerview)
 
 
-def replot_mag():
+def replot_mag(centerview):
     for plot in [magplot, magplot_centered]:
         plot.clear()
 
     Bv_tot = np.zeros(shape=(1, NUM_YS, 3))
+    ys = np.linspace(*centerview, num=NUM_YS)
     for dotx in dots_xs:
-        ys = np.linspace(start=LIMSTART, stop=LIMEND, num=NUM_YS)
-        Leiter = [[x, dotx, 0] for x in np.linspace(start=LIMSTART, stop=LIMEND, num=LEITER_RESOLUTION)]
+        Leiter = [[x, dotx, 0] for x in np.linspace(start=XLIMSTART, stop=XLIMEND, num=LEITER_RESOLUTION)]
         Bx, By, Bz, _ = BerechneFeld(Leiter, Strom=1, xs=(0,), ys=ys, zs=(8e-3,))
         
         Bx = Bx[:, :, 0]
@@ -156,17 +166,20 @@ def replot_mag():
     for plot in [magplot, magplot_centered]:
         plot.plot(ys, Bv_tot[0, :, 2], color='r')
         plot.set_ylim(MAGPLOT_YSTART, MAGPLOT_YEND)
-    magplot_centered.set_xlim(dots_xs[0], dots_xs[1])
+    
+    magplot.set_xlim(YLIMS)
+    magplot_centered.set_xlim(centerview)
 
-    replot_dir(Bv_tot)
+    replot_dir(Bv_tot, centerview)
 
 
-def replot_dots(dots_xs):
+def replot_dots(dots_xs, centerview):
     for plot in [coilplot, coilplot_centered]:
         plot.clear()
         for dot_x in dots_xs:
             plot.plot(dot_x, DOT_Y, color='red', marker='o', linestyle='')
-    coilplot_centered.set_xlim(dots_xs[0], dots_xs[1])
+    coilplot.set_xlim(YLIMS)
+    coilplot_centered.set_xlim(centerview)
 
 
 update_plot()
