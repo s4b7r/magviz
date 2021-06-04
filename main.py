@@ -65,6 +65,8 @@ YLIMEND = -YLIMSTART
 YLIMS = YLIMSTART, YLIMEND
 XLIMSTART = -.25
 XLIMEND = -XLIMSTART
+XLIMS = XLIMSTART, XLIMEND
+ZPLANE = 8e-3
 
 MAGPLOT_YSTART = -3e-5
 MAGPLOT_YEND = -MAGPLOT_YSTART
@@ -103,9 +105,9 @@ LEITER_RESOLUTION = 100
 
 def update_plot():
     dots_center = (dots_xs[1] - dots_xs[0]) / 2 + dots_xs[0]
-    centerview_width = .05
-    centerview_start = dots_center - centerview_width / 2
-    centerview_end = centerview_start + centerview_width
+    CENTERVIEW_WIDTH = .1
+    centerview_start = dots_center - CENTERVIEW_WIDTH / 2
+    centerview_end = centerview_start + CENTERVIEW_WIDTH
     centerview = (centerview_start, centerview_end)
 
     replot_dots(dots_xs, centerview)
@@ -129,48 +131,49 @@ def replot_dir(Bv_tot, centerview):
         return field_dir
 
     Bd = get_field_dir(Bv_tot)
+    colors = (Bd[0, :]+1)*.5
     ys = np.linspace(*centerview, num=NUM_YS)
     for plot in [dirplot, dirplot_centered]:
         plot.clear()
-        plot.scatter(ys, np.zeros(shape=ys.shape), s=500, c=(Bd[0, :]+1)*.5, marker='o', antialiased=False, edgecolors='')
+        plot.scatter(ys, np.zeros(shape=ys.shape), s=500, c=colors, marker='o', antialiased=False, edgecolors='')
 
     dirplot.set_xlim(YLIMS)
     dirplot_centered.set_xlim(centerview)
 
     replot_vec(Bd, centerview)
 
+    return colors
+
 
 def replot_mag(centerview):
     for plot in [magplot, magplot_centered]:
         plot.clear()
 
-    Bv_tot = np.zeros(shape=(1, NUM_YS, 3))
     ys = np.linspace(*centerview, num=NUM_YS)
+    zs = np.linspace(0, 1e-2, 20)
+    zidx_zplane = np.argmin(np.abs(zs - ZPLANE))
+    print(f'z = {zs[zidx_zplane]}')
+    Bv_tot = np.zeros(shape=(1, len(ys), len(zs), 3))
     for dotx in dots_xs:
         Leiter = [[x, dotx, 0] for x in np.linspace(start=XLIMSTART, stop=XLIMEND, num=LEITER_RESOLUTION)]
-        Bx, By, Bz, _ = BerechneFeld(Leiter, Strom=1, xs=(0,), ys=ys, zs=(8e-3,))
-        
-        Bx = Bx[:, :, 0]
-        By = By[:, :, 0]
-        Bz = Bz[:, :, 0]
-        Bx = Bx.reshape(*Bx.shape, 1)
-        By = By.reshape(*By.shape, 1)
-        Bz = Bz.reshape(*Bz.shape, 1)
-        Bv = np.concatenate((Bx, By, Bz), axis=2)
+        Bx, By, Bz, _ = BerechneFeld(Leiter, Strom=1, xs=(0,), ys=ys, zs=zs)
+        Bv = np.concatenate((np.expand_dims(Bx, Bx.ndim), np.expand_dims(By, By.ndim), np.expand_dims(Bz, Bz.ndim)), axis=3)
 
-        for plot in [magplot, magplot_centered]:
-            plot.plot(ys, Bv[0, :, 2], color='k', linestyle=':')
+        # for plot in [magplot, magplot_centered]:
+        #     plot.quiver(ys, zs, Bv[:, :, 1], Bv[:, :, 2])
 
         Bv_tot += Bv
 
-    for plot in [magplot, magplot_centered]:
-        plot.plot(ys, Bv_tot[0, :, 2], color='r')
-        plot.set_ylim(MAGPLOT_YSTART, MAGPLOT_YEND)
-    
     magplot.set_xlim(YLIMS)
     magplot_centered.set_xlim(centerview)
 
-    replot_dir(Bv_tot, centerview)
+    colors = replot_dir(Bv_tot[:, :, zidx_zplane, :], centerview)
+    
+    YS, ZS = np.meshgrid(ys, zs)
+    for plot in [magplot, magplot_centered]:
+        plot.quiver(YS, ZS, Bv_tot[0, :, :, 1].T, Bv_tot[0, :, :, 2].T, color=colors)
+        plot.plot(XLIMS, [zs[zidx_zplane]] * 2, c='r', linestyle=':')
+        # plot.set_ylim(MAGPLOT_YSTART, MAGPLOT_YEND)
 
 
 def replot_dots(dots_xs, centerview):
