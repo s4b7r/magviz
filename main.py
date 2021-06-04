@@ -169,9 +169,9 @@ def replot_mag(centerview):
 
     colors = replot_dir(Bv_tot[:, :, zidx_zplane, :], centerview)
     
-    YS, ZS = np.meshgrid(ys, zs)
+    ysmesh, zsmesh = np.meshgrid(ys, zs)
     for plot in [magplot, magplot_centered]:
-        plot.quiver(YS, ZS, Bv_tot[0, :, :, 1].T, Bv_tot[0, :, :, 2].T, color=colors)
+        plot.quiver(ysmesh, zsmesh, Bv_tot[0, :, :, 1].T, Bv_tot[0, :, :, 2].T, color=colors)
         plot.plot(XLIMS, [zs[zidx_zplane]] * 2, c='r', linestyle=':')
         # plot.set_ylim(MAGPLOT_YSTART, MAGPLOT_YEND)
 
