@@ -67,18 +67,20 @@ MAGPLOT_YSTART = -3e-5
 MAGPLOT_YEND = -MAGPLOT_YSTART
 
 fig = Figure(figsize=(5, 4), dpi=100)
-axes = fig.subplots(nrows=3, ncols=2, sharex='col', sharey=False,
-                    gridspec_kw={'height_ratios': [5, 1, 1]})
+axes = fig.subplots(nrows=4, ncols=2, sharex='col', sharey=False,
+                    gridspec_kw={'height_ratios': [5, 1, 1, 1]})
 magplot = axes[0, 0]
 magplot.set_ylim(MAGPLOT_YSTART, MAGPLOT_YEND)
 dirplot = axes[1, 0]
-coilplot = axes[2, 0]
+vecplot = axes[2, 0]
+coilplot = axes[3, 0]
 coilplot.set_xlim(LIMSTART, LIMEND)
 
 magplot_centered = axes[0, 1]
 magplot.set_ylim(MAGPLOT_YSTART, MAGPLOT_YEND)
 dirplot_centered = axes[1, 1]
-coilplot_centered = axes[2, 1]
+vecplot_centered = axes[2, 1]
+coilplot_centered = axes[3, 1]
 
 # for ax in axes.flat:
 #     ax.autoscale(False)
@@ -105,20 +107,29 @@ def update_plot():
     plt_canvas.draw()
 
 
+def replot_vec(Bd):
+    ys = np.linspace(start=LIMSTART, stop=LIMEND, num=NUM_YS)
+    for plot in [vecplot, vecplot_centered]:
+        plot.clear()
+        plot.quiver(ys, np.zeros(shape=ys.shape), Bd[0, :, 1], Bd[0, :, 2], color=(Bd[0, :]+1)*.5, headwidth=1.5, headlength=2, headaxislength=2)
+
+    vecplot_centered.set_xlim(dots_xs[0], dots_xs[1])
+
+
 def replot_dir(Bv_tot):
     def get_field_dir(field_vec):
         field_dir = field_vec / np.expand_dims(np.linalg.norm(field_vec, ord=2, axis=2), axis=2)
-        field_dir += 1
-        field_dir *= .5
         return field_dir
 
     Bd = get_field_dir(Bv_tot)
     ys = np.linspace(start=LIMSTART, stop=LIMEND, num=NUM_YS)
     for plot in [dirplot, dirplot_centered]:
         plot.clear()
-        plot.scatter(ys, np.zeros(shape=ys.shape), s=500, c=Bd[0, :], marker='o', antialiased=False, edgecolors='')
+        plot.scatter(ys, np.zeros(shape=ys.shape), s=500, c=(Bd[0, :]+1)*.5, marker='o', antialiased=False, edgecolors='')
 
     dirplot_centered.set_xlim(dots_xs[0], dots_xs[1])
+
+    replot_vec(Bd)
 
 
 def replot_mag():
